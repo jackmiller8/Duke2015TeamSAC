@@ -3,3 +3,16 @@ title: "EDA"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+library(knitr)
+library(broom)
+library(readxl)
+```
+
+
+
+```{r}
+pg2015 <- read.
+```
+
