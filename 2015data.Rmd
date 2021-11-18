@@ -11,8 +11,10 @@ library(readxl)
 ```
 
 
-
 ```{r}
-pg2015 <- read.
+file.exists("sportsref_download-3.xls")
+data2015 <- read_excel("Duke2015.xls")
+View(data2015)
 ```
+
 
