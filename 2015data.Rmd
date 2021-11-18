@@ -10,11 +10,42 @@ library(broom)
 library(readxl)
 ```
 
-
 ```{r}
-file.exists("sportsref_download-3.xls")
-data2015 <- read_excel("Duke2015.xls")
+data2015 <- read_excel("Duke2015.xls", sheet = 1)
 View(data2015)
 ```
 
+```{r}
+data2014 <- read_excel("Duke2015.xls", sheet = 2)
+View(data2014)
+```
+
+```{r}
+data2013 <- read_excel("Duke2015.xls", sheet = 3)
+View(data2013)
+```
+
+
+```{r}
+data2012 <- read_excel("Duke2015.xls", sheet = 4)
+View(data2012)
+```
+
+```{r}
+Min1415 <- merge(data2015, data2014, by = "Player", all.x = TRUE)
+min <- Min1415 %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  mutate(total_min = MP.x + MP.y) %>% 
+  select(Player, total_min)
+Min1315 <- merge(min, data2013, by = "Player", all.x = TRUE)
+min2 <- Min1315 %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  mutate(total_min = total_min + MP) %>% 
+  select(Player, total_min)
+Min1215 <- merge(min2, data2012, by = "Player", all.x = TRUE)
+min3 <- Min1215 %>% 
+  mutate_all(~replace(., is.na(.), 0)) %>% 
+  mutate(total_min = total_min + MP) %>% 
+  select(Player, total_min)
+```
 
