@@ -12,23 +12,10 @@ library(readxl)
 
 ```{r}
 data2015 <- read_excel("Duke2015.xls", sheet = 1)
-View(data2015)
-```
-
-```{r}
-data2014 <- read_excel("Duke2015.xls", sheet = 2)
-View(data2014)
-```
-
-```{r}
-data2013 <- read_excel("Duke2015.xls", sheet = 3)
-View(data2013)
-```
-
-
-```{r}
-data2012 <- read_excel("Duke2015.xls", sheet = 4)
-View(data2012)
+data2014 <- read_excel("Duke2015.xls", sheet = 3)
+data2013 <- read_excel("Duke2015.xls", sheet = 4)
+data2012 <- read_excel("Duke2015.xls", sheet = 5)
+MM2015 <- read_excel("Duke2015.xls", sheet = 2)
 ```
 
 ```{r}
@@ -47,5 +34,24 @@ min3 <- Min1215 %>%
   mutate_all(~replace(., is.na(.), 0)) %>% 
   mutate(total_min = total_min + MP) %>% 
   select(Player, total_min)
+```
+
+```{r}
+data2015 <- merge(MM2015, data2015, by = "Player", all.x = TRUE, all.y = TRUE)
+```
+
+```{r}
+colnames(data2015)[2] <- "total_min"
+colnames(data2015)[3] <- "min_before_mm"
+```
+
+
+```{r}
+data2015 <- data2015 %>% 
+  mutate(role = case_when(
+    min_before_mm > 1000 & (Class == "SR" | Class == "JR") ~ "ExpUp", 
+    min_before_mm > 800 & (Class == "SO" | Class == "FR") ~ "ExpUn",
+    TRUE ~ "Role"
+  ))
 ```
 
