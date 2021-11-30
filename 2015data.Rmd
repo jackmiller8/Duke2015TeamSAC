@@ -8,6 +8,9 @@ library(tidyverse)
 library(knitr)
 library(broom)
 library(readxl)
+library(ggrepel)
+library(ggimage)
+library(jpeg)
 ```
 
 ```{r}
@@ -16,6 +19,7 @@ data2014 <- read_excel("Duke2015.xls", sheet = 3)
 data2013 <- read_excel("Duke2015.xls", sheet = 4)
 data2012 <- read_excel("Duke2015.xls", sheet = 5)
 MM2015 <- read_excel("Duke2015.xls", sheet = 2)
+image <- readJPEG("images.jpeg")
 ```
 
 ```{r}
@@ -53,5 +57,128 @@ data2015 <- data2015 %>%
     min_before_mm > 800 & (Class == "SO" | Class == "FR") ~ "ExpUn",
     TRUE ~ "Role"
   ))
+```
+
+```{r}
+newdata <- read_excel("NCAAdata.xls", sheet = 1)
+rownames(newdata) <- newdata$School
+ncaadata2015 <- subset(newdata, select = -School)
+rownames(ncaadata2015) <- newdata$School
+```
+
+```{r}
+ncaa <- glm(NCAA ~ W + L + SRS + SOS + ConfW + HomeW + AwayW + 
+    Pts + Opp. + FG + FGA + `FG%` + `3P` + `3PA` + `3P%` + 
+    FT + FTA + `FT%` + ORB + TRB + AST + STL + BLK + TOV + PF, data = ncaadata2015, family = binomial)
+tidy(ncaa)
+```
+
+```{r result = HIDE}
+backward_select <- step(ncaa, scope = formula(ncaa), direction = "backward")
+```
+
+```{r}
+tidy(backward_select) %>% 
+  kable(digits = 3)
+```
+
+
+```{r}
+pgs2015 <- read_excel("NCAAdata.xls", sheet = 2) %>% 
+  mutate(stlblk = STL + BLK)
+dell <- read_excel("NCAAdata.xls", sheet = 3)
+tyus <- read_excel("NCAAdata.xls", sheet = 4)
+g1 <- subset(pgs2015, Player == "Tyus Jones (#1 DUKE)")
+champs <- read_excel("NCAAdata.xls", sheet = 5)
+```
+
+```{r}
+ggplot(data = pgs2015, aes(x = USG, y = PER, label = Player)) +
+  geom_text_repel(size = 3) +
+  labs(title = "Usage % and Player Efficency Rating (2014-15 Season)",
+       subtitle = "Among Top 15 Point Guards",
+       x = "Usage Percentage",
+       y = "Player Efficency Rating") +
+  theme_minimal()
+ggplot(data = pgs2015, aes(x = ASTtoTO, y = DWS, label = Player)) +
+  geom_text_repel(size = 3) +
+  labs(title = "AST/TO Ratio and Defensive Win Shares (2014-15 Season)",
+       subtitle = "Among Top 15 Point Guards",
+       x = "AST/TO Ratio",
+       y = "Defensive Win Shares") +
+  theme_minimal()
+ggplot(data = pgs2015, aes(x = FTp, y = stlblk, label = Player)) +
+  geom_text_repel(size = 3) +
+  labs(title = "Free Throw % and Steals+Blocks per Game (2014-15 Season)",
+       subtitle = "Among Top 15 Point Guards",
+       x = "Free Throw Percentage",
+       y = "Steals + Blocks per Game") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data = dell, aes(x = TOV, y = AST, label = Player)) +
+  geom_text_repel()
+ggplot(data = dell, aes(x = ASTtoTO, y = DPM, label = Player)) +
+  geom_text_repel()
+ggplot(data = dell, aes(x = FTp, y = STL, label = Player)) +
+  geom_text_repel()
+```
+
+
+```{r}
+ggplot(data = tyus, aes(x = twoptpct, y = TOV, color = W)) +
+  geom_jitter()
+```
+
+```{r}
+mean(pgs2015$stlblk)
+```
+
+
+```{r}
+tyus <- tyus %>% 
+  mutate(W = factor(W),
+         BigGame = factor(BigGame),
+         TOs = case_when(
+           TOV < 2 ~ "0 or 1",
+           TOV > 1 ~ "2+"
+         ),
+         total = PTS + TRB + AST + STL + BLK,
+         ptsper40 = 40 * (PTS / MP),
+         toper40 = 40 * (TOV / MP),
+         Apts = ptsper40 - mean(ptsper40))
+```
+
+```{r}
+ggplot(data = tyus, aes(x = toper40, y = ptsper40, color = BigGame)) +
+  geom_point(size = 7, alpha = 0.7) +
+  labs(title = "Tyus Jones Points and Turnovers per 40 Minutes (2014-15 Season)",
+       subtitle = "By 'Big Game'",
+       x = "Turnovers per 40 min",
+       y = "Points per 40 min") +
+  theme_minimal()
+ggplot(data = tyus, aes(x = TOs, fill = BigGame)) +
+  geom_bar() +
+  labs(title = "Tyus Jones Turnovers per Game (2014-15 Season)",
+       subtitle = "By 'Big Game'",
+       x = "Turnovers",
+       y = "Number of Games") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data = tyus, aes(x = TOV, y = total)) +
+  geom_image(aes(image = Logo), size = .06)
+```
+
+```{r}
+ggplot(data = champs, aes(x = PER, y = USG, label = Player))  +
+  geom_text_repel() +
+  labs(title = "Usage % and Player Efficency Rating",
+       subtitle = "Among Last 10 Championship Point Guards",
+       x = "Usage Percentage",
+       y = "Player Efficency Rating") +
+  theme_minimal()
 ```
 
